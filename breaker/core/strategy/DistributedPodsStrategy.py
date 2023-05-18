@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 from dateutil.rrule import rrule, SECONDLY
 from django_redis import get_redis_connection
 
-from community.personalisation.configuration import PersonalisationConfig
 from core.strategy.core import BreakerBaseStrategy, BreakerStates, BreakerBaseStrategyConfig
 from core.store import Store
 

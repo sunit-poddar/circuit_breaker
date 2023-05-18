@@ -14,13 +14,9 @@ class BreakerTest(TestCase):
     def setUp(self):
         cache.clear()
 
-    @patch("core.circuit_breaker.strategy.core.BreakerBaseStrategy._get_monotonic")
-    @patch("utils.remote_config_download.LocalRemoteConfig.get_breaker_config_for")
-    @patch("community.personalisation.configuration.PersonalisationConfig.get_breaker_config_flags")
-    def test_strategy_flag_turned_off(self, breaker_config_flags, strategy_config, patched_monotonic):
+    @patch("core.strategy.core.BreakerBaseStrategy._get_monotonic")
+    def test_strategy_flag_turned_off(self, patched_monotonic):
         breaker_name = "test_circuit_close_single_call_with_flag_turned_off"
-        breaker_config_flags.return_value = {breaker_name: False}
-        strategy_config.return_value = {"min_requests": 10, "window": 60}
         patched_monotonic.return_value = 1
 
         @circuit(breaker_name)
@@ -46,7 +42,6 @@ class BreakerTest(TestCase):
                 self.assertTrue(type(e), APIException)
                 self.assertNotEqual(type(e), CircuitBreakerError)
 
-    @patch("community.personalisation.configuration.PersonalisationConfig.get_breaker_config_flags")
     def test_strategy_flag_turned_off_circuit_close_single_call_returning_200(self, breaker_config_flags):
         breaker_name = "strategy_flag_turned_off_circuit_close_single_call_returning_200"
         breaker_config_flags.return_value = {breaker_name: True}
@@ -59,7 +54,6 @@ class BreakerTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(BreakerStrategiesSingleton.get_instance().get(breaker_name).state, BreakerStates.CLOSED)
 
-    @patch("community.personalisation.configuration.PersonalisationConfig.get_breaker_config_flags")
     def test_strategy_flag_turned_off_circuit_close_single_call_returning_500(self, breaker_config_flags):
         breaker_name = "strategy_flag_turned_off_circuit_close_single_call_returning_500"
         breaker_config_flags.return_value = {breaker_name: True}
@@ -72,7 +66,6 @@ class BreakerTest(TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(BreakerStrategiesSingleton.get_instance().get(breaker_name).state, BreakerStates.CLOSED)
 
-    @patch("community.personalisation.configuration.PersonalisationConfig.get_breaker_config_flags")
     def test_strategy_flag_turned_on_circuit_close_multiple_calls_200(self, breaker_config_flags):
         breaker_name = "strategy_flag_turned_on_circuit_close_multiple_calls_200"
         breaker_config_flags.return_value = {breaker_name: True}
@@ -86,8 +79,6 @@ class BreakerTest(TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(BreakerStrategiesSingleton.get_instance().get(breaker_name).state, BreakerStates.CLOSED)
 
-    @patch("utils.remote_config_download.LocalRemoteConfig.get_breaker_config_for")
-    @patch("community.personalisation.configuration.PersonalisationConfig.get_breaker_config_flags")
     def test_strategy_flag_turned_on_circuit_close_multiple_calls_500(self, breaker_config_flags, strategy_config):
         breaker_name = "strategy_flag_turned_on_circuit_close_multiple_calls_500"
 
@@ -114,13 +105,9 @@ class BreakerTest(TestCase):
         self.assertEqual(strategy_config_from_monitor.window, 60)
         self.assertTrue(BreakerStrategiesSingleton.get_instance().get(breaker_name).opened)
 
-    @patch("core.circuit_breaker.strategy.core.BreakerBaseStrategy._get_monotonic")
-    @patch("utils.remote_config_download.LocalRemoteConfig.get_breaker_config_for")
-    @patch("community.personalisation.configuration.PersonalisationConfig.get_breaker_config_flags")
-    def test_strategy_flag_turned_on_circuit_close_multiple_calls_500_with_circuit_open(self, breaker_config_flags, strategy_config, patched_monotonic):
+    @patch("core.strategy.core.BreakerBaseStrategy._get_monotonic")
+    def test_strategy_flag_turned_on_circuit_close_multiple_calls_500_with_circuit_open(self, patched_monotonic):
         breaker_name = "strategy_flag_turned_on_circuit_close_multiple_calls_500_with_circuit_open"
-        breaker_config_flags.return_value = {breaker_name: True}
-        strategy_config.return_value = {"min_requests": 10, "window": 60}
         patched_monotonic.return_value = 1
 
         @circuit(breaker_name, recovery_timeout=40)
@@ -147,13 +134,9 @@ class BreakerTest(TestCase):
         patched_monotonic.return_value = 41
         self.assertTrue(BreakerStrategiesSingleton.get_instance().get(breaker_name).closed)
 
-    @patch("core.circuit_breaker.strategy.core.BreakerBaseStrategy._get_monotonic")
-    @patch("utils.remote_config_download.LocalRemoteConfig.get_breaker_config_for")
-    @patch("community.personalisation.configuration.PersonalisationConfig.get_breaker_config_flags")
-    def test_strategy_flag_turned_on_circuit_close_multiple_calls_500_with_circuit_open_and_close(self, breaker_config_flags, strategy_config, patched_monotonic):
+    @patch("core.strategy.core.BreakerBaseStrategy._get_monotonic")
+    def test_strategy_flag_turned_on_circuit_close_multiple_calls_500_with_circuit_open_and_close(self, patched_monotonic):
         breaker_name = "strategy_flag_turned_on_circuit_close_multiple_calls_500_with_circuit_open_and_close"
-        breaker_config_flags.return_value = {breaker_name: True}
-        strategy_config.return_value = {"min_requests": 10, "window": 60}
 
         patched_monotonic.return_value = 1
 
@@ -186,21 +169,15 @@ class BreakerTest(TestCase):
         self.assertEqual(strategy_config_from_monitor.recovery_timeout, 30)
 
         patched_monotonic.return_value = 31
-        print("PATCHED MONOLOTINC =====", BreakerStrategiesSingleton.get_instance().get(breaker_name).state)
+        print("PATCHED MONOTONIC =====", BreakerStrategiesSingleton.get_instance().get(breaker_name).state)
         response = test_circuit_close()
         self.assertEqual(response.status_code, 200)
         self.assertTrue(BreakerStrategiesSingleton.get_instance().get(breaker_name).closed)
 
-    @patch("core.circuit_breaker.strategy.core.BreakerBaseStrategy._get_monotonic")
-    @patch("utils.remote_config_download.LocalRemoteConfig.get_breaker_config_for")
-    @patch("community.personalisation.configuration.PersonalisationConfig.get_breaker_config_flags")
+    @patch("core.strategy.core.BreakerBaseStrategy._get_monotonic")
     def test_strategy_flag_turned_on_circuit_close_multiple_calls_500_with_circuit_open_and_close_with_params(self,
-                                                                                                              breaker_config_flags,
-                                                                                                              strategy_config,
                                                                                                               patched_monotonic):
         breaker_name = "strategy_flag_turned_on_circuit_close_multiple_calls_500_with_circuit_open_and_close_v2"
-        breaker_config_flags.return_value = {breaker_name: True}
-        strategy_config.return_value = {"min_requests": 10, "window": 60}
 
         patched_monotonic.return_value = 1
 

@@ -6,7 +6,7 @@ import logging
 
 from dataclasses import dataclass
 
-from core.circuit_breaker.store import CircuitStoreSingleton
+from core.store import CircuitStoreSingleton
 
 
 logger = logging.getLogger(__name__)
