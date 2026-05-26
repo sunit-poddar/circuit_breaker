@@ -1,0 +1,81 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "breakerd"
+version = "0.1.0"
+description = "Production-grade distributed circuit breaker for multi-pod Python services"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Sunit Poddar", email = "sunit@foliumlabs.net" }]
+keywords = ["circuit-breaker", "resilience", "distributed", "fault-tolerance", "redis"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: System :: Distributed Computing",
+]
+dependencies = [
+    "python-dateutil>=2.8",
+]
+
+[project.optional-dependencies]
+redis = [
+    "redis>=4.5",
+]
+metrics = [
+    "prometheus_client>=0.17",
+]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "pytest-benchmark>=4.0",
+    "fakeredis>=2.14",
+    "ruff>=0.1",
+    "mypy>=1.5",
+    "types-python-dateutil",
+    "bandit>=1.7",
+    "pip-audit>=2.6",
+]
+
+[project.urls]
+Homepage = "https://github.com/sunit-poddar/breakerd"
+Repository = "https://github.com/sunit-poddar/breakerd"
+Issues = "https://github.com/sunit-poddar/breakerd/issues"
+Changelog = "https://github.com/sunit-poddar/breakerd/blob/master/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/breakerd"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["src/breakerd"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 70
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+ignore_missing_imports = true
