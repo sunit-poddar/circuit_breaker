@@ -207,7 +207,10 @@ class DistributedPods(BreakerBaseStrategy):
         self._failure_count += 1
         buffered_data = self.store.record_failure(self.name)
 
-        if self._should_open(buffered_data.get(Store.SUCCESS), buffered_data.get(Store.FAILED)):
+        if self._state == BreakerStates.HALF_OPEN:
+            # Probe request failed — reopen immediately without threshold checks.
+            self._open_circuit()
+        elif self._should_open(buffered_data.get(Store.SUCCESS), buffered_data.get(Store.FAILED)):
             self._open_circuit()
 
         return self._state

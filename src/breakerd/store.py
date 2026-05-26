@@ -1,3 +1,4 @@
+import threading
 from datetime import datetime
 
 
@@ -32,6 +33,7 @@ class CircuitStoreSingleton:
         if not hasattr(self, "_initialized"):
             self._initialized = True
             self.__circuits = {}
+            self._lock = threading.Lock()
 
     def _initialize_if_absent(self, breaker_name: str) -> None:
         if breaker_name not in self.__circuits:
@@ -52,31 +54,37 @@ class CircuitStoreSingleton:
         self._initialize_if_absent(breaker_name)
 
     def get_past_window(self, breaker_name):
-        return self.__circuits.get(breaker_name, {}).get(Store.PAST_WINDOW)
+        with self._lock:
+            return self.__circuits.get(breaker_name, {}).get(Store.PAST_WINDOW)
 
     def update_past_window(self, breaker_name, past_window):
-        if breaker_name in self.__circuits:
-            self.__circuits[breaker_name][Store.PAST_WINDOW] = {
-                **self.__circuits[breaker_name][Store.PAST_WINDOW],
-                **past_window,
-            }
+        with self._lock:
+            if breaker_name in self.__circuits:
+                self.__circuits[breaker_name][Store.PAST_WINDOW] = {
+                    **self.__circuits[breaker_name][Store.PAST_WINDOW],
+                    **past_window,
+                }
 
     def get_breaker(self, breaker_name):
-        self._initialize_if_absent(breaker_name)
-        return self.__circuits.get(breaker_name)
+        with self._lock:
+            self._initialize_if_absent(breaker_name)
+            return dict(self.__circuits[breaker_name])
 
     def record_success(self, breaker_name, increment=1):
-        self._initialize_if_absent(breaker_name)
-        self.__circuits[breaker_name][Store.SUCCESS] += increment
-        self.__circuits[breaker_name][Store.TOTAL] += increment
-        return self.__circuits[breaker_name]
+        with self._lock:
+            self._initialize_if_absent(breaker_name)
+            self.__circuits[breaker_name][Store.SUCCESS] += increment
+            self.__circuits[breaker_name][Store.TOTAL] += increment
+            return dict(self.__circuits[breaker_name])
 
     def record_failure(self, breaker_name, increment=1):
-        self._initialize_if_absent(breaker_name)
-        self.__circuits[breaker_name][Store.FAILED] += increment
-        self.__circuits[breaker_name][Store.TOTAL] += increment
-        return self.__circuits[breaker_name]
+        with self._lock:
+            self._initialize_if_absent(breaker_name)
+            self.__circuits[breaker_name][Store.FAILED] += increment
+            self.__circuits[breaker_name][Store.TOTAL] += increment
+            return dict(self.__circuits[breaker_name])
 
     def reset_breaker(self, breaker_name):
-        self.__circuits.pop(breaker_name, None)
-        self._initialize_if_absent(breaker_name)
+        with self._lock:
+            self.__circuits.pop(breaker_name, None)
+            self._initialize_if_absent(breaker_name)
