@@ -45,7 +45,6 @@ dev = [
     "pip-audit>=2.6",
 ]
 
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/breakerd"]
 
