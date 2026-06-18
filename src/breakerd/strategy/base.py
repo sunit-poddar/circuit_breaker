@@ -85,7 +85,7 @@ class BreakerBaseStrategy(abc.ABC):
         self._state = value
 
     def _open_circuit(self):
-        if self._state == BreakerStates.CLOSED:
+        if self._state in (BreakerStates.CLOSED, BreakerStates.HALF_OPEN):
             self.log(f"OPENING CIRCUIT - {self.name}")
             self._state = BreakerStates.OPEN
             self._opened = self._get_monotonic()
